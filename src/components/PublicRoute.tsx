@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { useEffect, useState } from "react";
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -11,10 +12,16 @@ interface PublicRouteProps {
  * Jika sudah login, redirect ke home
  */
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Tampilkan loading saat check auth
-  if (loading) {
+  // ✅ Wait for Zustand to hydrate from localStorage
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // ✅ Show loading while hydrating
+  if (!isHydrated) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C6BF0]" />
@@ -22,12 +29,12 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     );
   }
 
-  // Jika sudah authenticated, redirect ke home
+  // ✅ Redirect jika sudah authenticated
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // Jika belum authenticated, tampilkan children (login page)
+  // ✅ Render public content (login page)
   return <>{children}</>;
 };
 

@@ -19,7 +19,6 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -35,7 +34,10 @@ export const useAuthStore = create<AuthState>()(
         login: async (email: string, password: string) => {
           set({ loading: true, error: null });
           try {
-            const response = await api.post("/login-web", { email, password });
+            const response = await api.post("/auth/login-web", {
+              email,
+              password,
+            });
             const userData = response.data.data.user;
 
             set({
@@ -58,40 +60,16 @@ export const useAuthStore = create<AuthState>()(
         logout: async () => {
           set({ loading: true });
           try {
-            await api.post("/logout");
+            await api.post("/auth/logout");
+          } catch (error: any) {
+            console.error("Logout error:", error);
+          } finally {
+            // Clear state regardless of API result
             set({
               user: null,
               isAuthenticated: false,
               loading: false,
               error: null,
-            });
-          } catch (error: any) {
-            console.error("Logout error:", error);
-            // Clear state meskipun error
-            set({
-              user: null,
-              isAuthenticated: false,
-              loading: false,
-            });
-          }
-        },
-
-        checkAuth: async () => {
-          set({ loading: true });
-          try {
-            const response = await api.get("/me"); // Endpoint untuk get current user
-            const userData = response.data.data.user;
-
-            set({
-              user: userData,
-              isAuthenticated: true,
-              loading: false,
-            });
-          } catch (error) {
-            set({
-              user: null,
-              isAuthenticated: false,
-              loading: false,
             });
           }
         },
@@ -99,9 +77,9 @@ export const useAuthStore = create<AuthState>()(
         clearError: () => set({ error: null }),
       }),
       {
-        name: "auth-storage", // Key di localStorage
+        name: "auth-storage", // localStorage key
         partialize: (state) => ({
-          user: state.user, // Hanya simpan user info
+          user: state.user,
           isAuthenticated: state.isAuthenticated,
         }),
       }

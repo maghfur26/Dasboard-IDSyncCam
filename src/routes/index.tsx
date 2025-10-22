@@ -4,7 +4,7 @@ import Layout from "../components/fragments/Layout";
 import LoginPages from "../pages/LoginPages";
 import UserPages from "../pages/UserPages";
 import SpreedshetPages from "../pages/SpreedshetPages";
-import { ProtectedRoute } from "../components/ProtectRoute";
+import ProtectedRoute from "../components/ProtectRoute";
 import PublicRoute from "../components/PublicRoute";
 
 const router = createBrowserRouter([
