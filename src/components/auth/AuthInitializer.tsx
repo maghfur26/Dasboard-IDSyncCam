@@ -1,4 +1,3 @@
-import { useAuthStore } from "../../store/useAuthStore";
 
 export const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({
   children,

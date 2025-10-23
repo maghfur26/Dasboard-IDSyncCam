@@ -1,5 +1,4 @@
 export const saveTokens = async (accessToken: string,
-    refreshToken: string
 ) => {
     await localStorage.setItem('accessToken', accessToken);
 }

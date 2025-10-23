@@ -1,9 +1,8 @@
 import Avatar from "../elements/Avatar";
 import Sidebar from "../elements/Sidebar";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { IoIosLogOut } from "react-icons/io";
-import api from "../../api/axiosInstance";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const Layout = () => {
@@ -12,8 +11,7 @@ const Layout = () => {
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const {  logout } = useAuthStore();
 
   const handleLogout = async () => {
     setLoggingOut(true);
