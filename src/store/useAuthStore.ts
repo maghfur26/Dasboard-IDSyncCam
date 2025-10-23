@@ -1,4 +1,3 @@
-// src/store/authStore.ts
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import api from "../api/axiosInstance";

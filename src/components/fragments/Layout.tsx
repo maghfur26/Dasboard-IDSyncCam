@@ -11,71 +11,22 @@ const Layout = () => {
   const [open, setIsOpen] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
 
-  const { isAuthenticated, clearAuth, setIsAuthenticated } = useAuthStore();
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   const handleLogout = async () => {
-    if (loggingOut) return;
-
     setLoggingOut(true);
     try {
-      await api.post("/auth/logout");
-    } catch (error: any) {
+      await logout();
+      navigate("/login");
+    } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      clearAuth();
-      localStorage.removeItem("auth-storage");
-      setIsAuthenticated(false);
-
-      navigate("/login", { replace: true });
       setLoggingOut(false);
     }
   };
-
-  const handleToggle = () => {
-    setIsOpen(!open);
-  };
-
-  useEffect(() => {
-    if (open) {
-      setIsOpen(false);
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const state = useAuthStore.getState();
-
-      if (!state.isAuthenticated || !state.token) {
-        navigate("/login", { replace: true });
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  // Tutup dropdown saat klik di luar
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Cek apakah klik di luar avatar DAN dropdown
-      if (open && !target.closest('.avatar-container') && !target.closest('.dropdown-menu')) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C6BF0]" />
-      </div>
-    );
-  }
+  
 
   return (
     <div className="flex min-h-screen">
@@ -87,7 +38,7 @@ const Layout = () => {
         }`}
       >
         <header className="relative shadow-sm">
-          <Avatar onClick={handleToggle} />
+          <Avatar onClick={() => setIsOpen(!open)} />
 
           {/* Ganti class dari avatar-dropdown ke dropdown-menu */}
           <div
