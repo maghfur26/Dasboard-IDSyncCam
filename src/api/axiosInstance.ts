@@ -58,26 +58,26 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
 
-// Di bagian catch refreshError (sekitar baris 79-84)
-if (typeof window !== "undefined") {
-  localStorage.removeItem("auth-storage");
+      // Di bagian catch refreshError (sekitar baris 79-84)
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth-storage");
 
-  // ⭐ GANTI INI
-  import("../store/useAuthStore").then(({ useAuthStore }) => {
-    useAuthStore.setState({  // ⭐ GANTI getState().logout() DENGAN setState
-      user: null,
-      isAuthenticated: false,
-      loading: false,
-      error: null,
-    });
-  });
+        // ⭐ GANTI INI
+        import("../store/useAuthStore").then(({ useAuthStore }) => {
+          useAuthStore.setState({
+            user: null,
+            isAuthenticated: false,
+            loading: false,
+            error: null,
+          });
+        });
 
-  // ⭐ TAMBAHKAN CEK PATH
-  const currentPath = window.location.pathname;
-  if (currentPath !== "/login") {
-    window.location.href = "/login";
-  }
-}
+        // ⭐ TAMBAHKAN CEK PATH
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login") {
+          window.location.href = "/login";
+        }
+      }
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
