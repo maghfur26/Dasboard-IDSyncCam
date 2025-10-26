@@ -7,53 +7,77 @@ import { useAuthStore } from "../store/useAuthStore";
 
 function LoginPages() {
   const [hidden, setHidden] = useState<boolean>(true);
-  const [formData, setFormData] = useState<{ email: string; password: string }>({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState<{ email: string; password: string }>(
+    {
+      email: "",
+      password: "",
+    }
+  );
 
   const navigate = useNavigate();
-  const { isAuthenticated, loading, error, login, clearError, user } = useAuthStore();
+
+  // Ambil dari Zustand store
+  const { isAuthenticated, loading, error, login, clearError } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  clearError();
+    e.preventDefault();
+    clearError();
 
-  const { error: validationError } = loginSchema.validate({
-    email: formData.email,
-    password: formData.password,
-  });
+    // Validasi form dengan Joi
+    const { error: validationError } = loginSchema.validate({
+      email: formData.email,
+      password: formData.password,
+    });
 
-  if (validationError) {
-    return;
-  }
+    if (validationError) {
+      return;
+    }
 
-  try {
-    // ⭐ HAPUS SEMUA CODE CHECK ROLE DI SINI
-    // Cukup panggil login saja
-    await login(formData.email, formData.password);
-    // Redirect dihandle oleh useEffect
-  } catch (error: any) {
-    console.error("Login failed:", error);
-  }
-};
+    try {
+      // Login akan otomatis set cookies dari backend
+      await login(formData.email, formData.password);
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Check role setelah login berhasil
+      const user = await useAuthStore.getState().user;
+
+      if (
+        user?.role !== "ADMIN" &&
+        user?.role !== "admin" &&
+        user?.role !== "Admin"
+      ) {
+        // Logout jika bukan admin
+        await useAuthStore.getState().logout();
+        // Set custom error (opsional: bisa tambahkan method setError di store)
+        return;
+      }
+
+      // Redirect ke dashboard
+      navigate("/", { replace: true });
+    } catch (error: any) {
+      // Error sudah di-handle di store
+      console.error("Login failed:", error);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     setFormData({
       ...formData,
       [name]: value,
     });
+
     if (error) clearError();
   };
 
-// ⭐ UBAH useEffect JADI SEDERHANA
-useEffect(() => {
-  if (isAuthenticated && user) {
-    navigate("/", { replace: true });
-  }
-}, [isAuthenticated, user, navigate]);
+  // Redirect jika sudah authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
+  if (isAuthenticated) return null;
 
   return (
     <div className="h-screen min-w-screen flex items-center justify-center bg-[#EAF0FF]">
@@ -111,12 +135,14 @@ useEffect(() => {
               </button>
             </div>
 
+            {/* Error Message dari Zustand Store */}
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
+            {/* Submit Button dengan Loading State dari Store */}
             <button
               type="submit"
               disabled={!formData.email || !formData.password || loading}

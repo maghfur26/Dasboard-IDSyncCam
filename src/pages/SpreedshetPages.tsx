@@ -3,6 +3,8 @@ import ListButton from "../components/elements/ListButton";
 import Table from "../components/elements/Table";
 import Search from "../components/elements/Search";
 import api from "../api/axiosInstance";
+import Swal from "sweetalert2";
+import { FaTrashRestoreAlt } from "react-icons/fa";
 
 interface Peserta {
   id: string;
@@ -87,6 +89,64 @@ function SpreedshetPages() {
     }
   };
 
+  const deletePeserta = async (id: string) => {
+    try {
+      // Konfirmasi delete dengan SweetAlert2
+      const result = await Swal.fire({
+        title: "Apakah Anda yakin?",
+        text: "Data peserta akan dihapus permanen!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Ya, hapus!",
+        cancelButtonText: "Batal",
+      });
+
+      if (result.isConfirmed) {
+        // Tampilkan loading
+        Swal.fire({
+          title: "Menghapus...",
+          text: "Mohon tunggu sebentar",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        const response = await api.delete(`/peserta/${id}`);
+
+        if (response.data.success) {
+          await fetchPeserta();
+
+          Swal.fire({
+            title: "Berhasil!",
+            text: "Peserta berhasil dihapus",
+            icon: "success",
+            confirmButtonColor: "#3085d6",
+            timer: 2000,
+          });
+        } else {
+          throw new Error("PESERTA_NOT_FOUND");
+        }
+
+        return response.data;
+      }
+    } catch (error) {
+      console.error("Error deleting peserta:", error);
+
+      // Tampilkan error message
+      Swal.fire({
+        title: "Gagal!",
+        text: "Terjadi kesalahan saat menghapus peserta",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+
+      throw error;
+    }
+  };
+
   // Handle perubahan bulan
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const month = e.target.value;
@@ -123,7 +183,6 @@ function SpreedshetPages() {
         Sheet
       </h1>
 
-      {/* Pass selectedMonth dan filteredPeserta ke ListButton */}
       <ListButton
         selectedMonth={selectedMonth}
         filteredPeserta={filteredPeserta}
@@ -184,16 +243,25 @@ function SpreedshetPages() {
             )}
           </div>
         ) : (
-          <Table
-            thead={["No", "Nama Lengkap", "Asal Sekolah", "Usia", "Aksi"]}
-            tbody={displayedData.map((peserta: Peserta, index: number) => ({
-              No: (index + 1).toString(),
-              "Nama Lengkap": peserta.fullName,
-              "Asal Sekolah": peserta.asalSekolah,
-              Usia: peserta.usia,
-              Aksi: peserta.id,
-            }))}
-          />
+          <div>
+            <Table
+              thead={["No", "Nama Lengkap", "Asal Sekolah", "Usia", "Aksi"]}
+              tbody={displayedData.map((peserta: Peserta, index: number) => ({
+                No: (index + 1).toString(),
+                "Nama Lengkap": peserta.fullName,
+                "Asal Sekolah": peserta.asalSekolah,
+                Usia: peserta.usia,
+                Aksi: peserta.id,
+              }))}
+              onClickDelete={deletePeserta}
+            />
+            <div className="grid place-items-end">
+              <button className="bg-[#434B96] text-white px-10 py-2 rounded-md font-poppins first-letter:uppercase flex flex-col justify-center items-center gap-2">
+                <FaTrashRestoreAlt className="text-2xl" />
+                <p className="text-sm">Hapus Data</p>
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

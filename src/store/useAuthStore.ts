@@ -61,7 +61,6 @@ export const useAuthStore = create<AuthState>()(
               });
               throw new Error("Unauthorized role");
             }
-            // ⭐ SAMPAI SINI
 
             set({
               user: userData,
@@ -77,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
                 : error.response?.data?.message || "Login gagal";
 
             set({
-              error: errorMessage, // ⭐ GANTI DARI error.response?.data?.message
+              error: errorMessage, //
               loading: false,
               isAuthenticated: false,
               user: null,
