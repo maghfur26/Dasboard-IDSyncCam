@@ -6,21 +6,14 @@ interface PublicRouteProps {
   children: React.ReactNode;
 }
 
-/**
- * PublicRoute - Untuk halaman yang hanya bisa diakses jika belum login
- * Contoh: Login page, Register page
- * Jika sudah login, redirect ke home
- */
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // ✅ Wait for Zustand to hydrate from localStorage
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // ✅ Show loading while hydrating
   if (!isHydrated) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -29,12 +22,16 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     );
   }
 
-  // ✅ Redirect jika sudah authenticated
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+  // ⭐ UBAH BAGIAN INI (sekitar baris 31-33)
+  if (isAuthenticated && user) {
+    const isAdmin =
+      user.role === "ADMIN" || user.role === "admin" || user.role === "Admin";
+
+    if (isAdmin) {
+      return <Navigate to="/" replace />;
+    }
   }
 
-  // ✅ Render public content (login page)
   return <>{children}</>;
 };
 

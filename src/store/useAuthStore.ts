@@ -39,6 +39,30 @@ export const useAuthStore = create<AuthState>()(
             });
             const userData = response.data.data.user;
 
+            // ⭐ TAMBAHKAN INI (BARIS BARU)
+            const isAdmin =
+              userData.role === "ADMIN" ||
+              userData.role === "admin" ||
+              userData.role === "Admin";
+
+            if (!isAdmin) {
+              try {
+                await api.post("/auth/logout");
+              } catch (e) {
+                console.error("Logout error:", e);
+              }
+
+              set({
+                user: null,
+                isAuthenticated: false,
+                loading: false,
+                error:
+                  "Akses ditolak. Hanya admin yang dapat login ke sistem ini.",
+              });
+              throw new Error("Unauthorized role");
+            }
+            // ⭐ SAMPAI SINI
+
             set({
               user: userData,
               isAuthenticated: true,
@@ -46,8 +70,14 @@ export const useAuthStore = create<AuthState>()(
               error: null,
             });
           } catch (error: any) {
+            // ⭐ UBAH INI
+            const errorMessage =
+              error.message === "Unauthorized role"
+                ? "Akses ditolak. Hanya admin yang dapat login ke sistem ini."
+                : error.response?.data?.message || "Login gagal";
+
             set({
-              error: error.response?.data?.message || "Login failed",
+              error: errorMessage, // ⭐ GANTI DARI error.response?.data?.message
               loading: false,
               isAuthenticated: false,
               user: null,
@@ -63,7 +93,6 @@ export const useAuthStore = create<AuthState>()(
           } catch (error: any) {
             console.error("Logout error:", error);
           } finally {
-            // Clear state regardless of API result
             set({
               user: null,
               isAuthenticated: false,
@@ -76,7 +105,7 @@ export const useAuthStore = create<AuthState>()(
         clearError: () => set({ error: null }),
       }),
       {
-        name: "auth-storage", // localStorage key
+        name: "auth-storage",
         partialize: (state) => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,

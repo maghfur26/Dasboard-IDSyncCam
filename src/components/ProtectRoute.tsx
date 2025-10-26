@@ -6,20 +6,26 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-/**
- * ProtectedRoute - Untuk halaman yang hanya bisa diakses jika sudah login
- * Jika belum login, redirect ke login page
- */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore(); // ⭐ TAMBAH logout
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // ✅ Wait for Zustand to hydrate from localStorage
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // ✅ Show loading while hydrating
+  // ⭐ TAMBAHKAN useEffect INI (BARU)
+  useEffect(() => {
+    if (isHydrated && isAuthenticated && user) {
+      const isAdmin =
+        user.role === "ADMIN" || user.role === "admin" || user.role === "Admin";
+
+      if (!isAdmin) {
+        logout();
+      }
+    }
+  }, [isHydrated, isAuthenticated, user, logout]);
+
   if (!isHydrated) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -28,12 +34,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // ✅ Redirect jika belum authenticated
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Render protected content
+  // ⭐ TAMBAHKAN VALIDASI INI (BARU)
+  const isAdmin =
+    user.role === "ADMIN" || user.role === "admin" || user.role === "Admin";
+
+  if (!isAdmin) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 

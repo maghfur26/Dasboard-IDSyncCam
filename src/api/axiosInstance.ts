@@ -8,10 +8,8 @@ const api = axios.create({
   },
 });
 
-// ✅ Daftar endpoint yang TIDAK perlu retry refresh token
 const PUBLIC_ENDPOINTS = ["/auth/login", "/auth/login-web", "/auth/register"];
 
-// Track refresh token request to prevent multiple simultaneous calls
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -26,18 +24,11 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-
-// Interceptor untuk handle refresh token
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // ❌ JANGAN retry jika:
-    // 1. Bukan 401
-    // 2. Sudah pernah retry
-    // 3. Request ke public endpoint (login, register)
-    // 4. Request ke refresh token endpoint itu sendiri
     if (
       error.response?.status !== 401 ||
       originalRequest._retry ||
@@ -49,7 +40,6 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // ✅ Queue multiple requests while refreshing
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -62,27 +52,32 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // ✅ Coba refresh token (cookies akan auto di-update oleh backend)
       await api.post("/auth/refresh-token");
-
       processQueue(null);
-
-      // ✅ Retry request yang gagal
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
 
-      // ✅ Jika refresh gagal, clear auth dan redirect ke login
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth-storage");
+// Di bagian catch refreshError (sekitar baris 79-84)
+if (typeof window !== "undefined") {
+  localStorage.removeItem("auth-storage");
 
-        // Import useAuthStore di sini untuk clear state
-        import("../store/useAuthStore").then(({ useAuthStore }) => {
-          useAuthStore.getState().logout();
-        });
+  // ⭐ GANTI INI
+  import("../store/useAuthStore").then(({ useAuthStore }) => {
+    useAuthStore.setState({  // ⭐ GANTI getState().logout() DENGAN setState
+      user: null,
+      isAuthenticated: false,
+      loading: false,
+      error: null,
+    });
+  });
 
-        window.location.href = "/login";
-      }
+  // ⭐ TAMBAHKAN CEK PATH
+  const currentPath = window.location.pathname;
+  if (currentPath !== "/login") {
+    window.location.href = "/login";
+  }
+}
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
