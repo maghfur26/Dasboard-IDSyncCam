@@ -84,7 +84,7 @@ function LoginPages() {
       <div className="w-[70%] h-[768px] flex bg-white rounded-xl shadow-[4px_9px_8px_0px_rgba(0,0,0,0.25)]">
         <div className="w-[40%] bg-gradient-to-br from-[#1E4CB5] to-[#5561D3] rounded-tr-[120px] flex flex-col items-center justify-center">
           <img className="w-[40%] lg:w-[30%] mb-2" src={logo} alt="logo.png" />
-          <h1 className="font-poppins text-white text-4xl text-center">
+          <h1 className="font-poppins text-white text-4xl text-center px-4">
             Dinas Kependudukan Dan Pencatatan Sipil
           </h1>
         </div>
